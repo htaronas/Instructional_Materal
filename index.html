@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLE Grade 8 ICT Tools & Software Quest</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -4px rgba(14, 165, 233, 0.3);
+        }
+
+        .pop-in {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(56, 189, 248, 0.6);
+        }
+    </style>
+</head>
+<body class="text-slate-100 flex flex-col min-h-screen justify-between p-4 md:p-8">
+
+    <!-- Audio Synthesizer (Web Audio API) -->
+    <script>
+        class SoundFX {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            playTone(freq, type, duration) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+
+            correct() {
+                this.playTone(523.25, 'sine', 0.1); // C5
+                setTimeout(() => this.playTone(659.25, 'sine', 0.15), 100); // E5
+                setTimeout(() => this.playTone(783.99, 'sine', 0.2), 200); // G5
+            }
+
+            wrong() {
+                this.playTone(220, 'sawtooth', 0.15);
+                setTimeout(() => this.playTone(180, 'sawtooth', 0.25), 120);
+            }
+
+            click() {
+                this.playTone(400, 'triangle', 0.05);
+            }
+
+            win() {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => this.playTone(freq, 'sine', 0.2), idx * 120);
+                });
+            }
+        }
+        const sfx = new SoundFX();
+    </script>
+
+    <!-- Header / Navbar -->
+    <header class="max-w-4xl mx-auto w-full flex justify-between items-center mb-6 glass-card p-4 rounded-2xl">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xl border border-cyan-500/30">
+                <i class="fa-solid fa-laptop-code"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight text-white">TLE Grade 8 ICT Quest</h1>
+                <p class="text-xs text-slate-400">Quarter 1 • Week 1 Assessment</p>
+            </div>
+        </div>
+
+        <!-- Mute Toggle -->
+        <button id="soundToggle" onclick="toggleSound()" class="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-2 transition border border-slate-700">
+            <i id="soundIcon" class="fa-solid fa-volume-high text-cyan-400"></i>
+            <span id="soundText">Sound ON</span>
+        </button>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="max-w-4xl mx-auto w-full flex-1 flex flex-col justify-center">
+        
+        <!-- START SCREEN -->
+        <section id="startScreen" class="glass-card rounded-3xl p-6 sm:p-10 text-center shadow-2xl pop-in">
+            <div class="inline-flex p-4 rounded-full bg-cyan-500/10 text-cyan-400 mb-4 border border-cyan-500/20">
+                <i class="fa-solid fa-gamepad text-4xl"></i>
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">ICT Tools & Software Master Quiz</h2>
+            <p class="text-slate-300 max-w-lg mx-auto mb-6 text-sm sm:text-base leading-relaxed">
+                Test your knowledge on ICT tools, equipment, system servicing, hardware, and types of software based on MATATAG TLE 8 Quarter 1!
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto mb-8 text-left">
+                <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 flex items-center gap-3">
+                    <i class="fa-solid fa-list-check text-cyan-400 text-xl"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Questions</p>
+                        <p class="font-bold text-sm text-slate-200">30 Items</p>
+                    </div>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 flex items-center gap-3">
+                    <i class="fa-solid fa-fire text-amber-400 text-xl"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Streak Bonus</p>
+                        <p class="font-bold text-sm text-slate-200">Earn Badges</p>
+                    </div>
+                </div>
+                <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 flex items-center gap-3">
+                    <i class="fa-solid fa-lightbulb text-emerald-400 text-xl"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Feedback</p>
+                        <p class="font-bold text-sm text-slate-200">Instant Keys</p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-cyan-500/25 transition transform active:scale-95 text-lg">
+                <i class="fa-solid fa-play mr-2"></i> Start Challenge
+            </button>
+        </section>
+
+        <!-- QUIZ SCREEN -->
+        <section id="quizScreen" class="hidden flex-col gap-6">
+            <!-- Top HUD Bar -->
+            <div class="glass-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+                <!-- Question Tracker -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Question</span>
+                    <span id="questionNum" class="text-lg font-bold text-cyan-400">1</span>
+                    <span class="text-xs text-slate-500">/ 30</span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="flex-1 min-w-[150px] bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-700">
+                    <div id="progressBar" class="bg-gradient-to-r from-cyan-500 to-blue-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+
+                <!-- Live Score & Streak -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5 text-amber-400 font-bold bg-amber-400/10 px-3 py-1 rounded-xl border border-amber-400/20 text-sm">
+                        <i class="fa-solid fa-fire"></i>
+                        <span id="streakCount">0</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1 rounded-xl border border-emerald-400/20 text-sm">
+                        <i class="fa-solid fa-trophy"></i>
+                        <span id="scoreDisplay">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Question Card -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+                <!-- Topic Tag -->
+                <div class="mb-4 inline-block">
+                    <span id="partTag" class="text-xs font-semibold px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                        Part I: Words & Tools
+                    </span>
+                </div>
+
+                <!-- Question Text -->
+                <h3 id="questionText" class="text-xl sm:text-2xl font-bold text-white mb-6 leading-snug">
+                    Question text goes here?
+                </h3>
+
+                <!-- Answer Choices -->
+                <div id="optionsContainer" class="grid grid-cols-1 gap-3.5 mb-6">
+                    <!-- Options inserted via JS -->
+                </div>
+
+                <!-- Instant Feedback Panel -->
+                <div id="feedbackPanel" class="hidden p-4 rounded-2xl border transition-all duration-300 pop-in mb-4">
+                    <div class="flex items-start gap-3">
+                        <div id="feedbackIcon" class="text-xl mt-0.5"></div>
+                        <div>
+                            <h4 id="feedbackTitle" class="font-bold text-sm mb-1"></h4>
+                            <p id="feedbackReason" class="text-xs text-slate-300 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="flex justify-end">
+                    <button id="nextBtn" onclick="nextQuestion()" disabled class="px-6 py-3 bg-slate-700 text-slate-400 cursor-not-allowed font-bold rounded-xl transition flex items-center gap-2">
+                        <span>Next Question</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESULT SCREEN -->
+        <section id="resultScreen" class="hidden glass-card rounded-3xl p-6 sm:p-10 shadow-2xl text-center pop-in">
+            <!-- Badge & Score Header -->
+            <div id="badgeIcon" class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center text-4xl shadow-xl">
+                🏆
+            </div>
+
+            <h2 id="resultTitle" class="text-3xl font-extrabold text-white mb-1">Outstanding Performance!</h2>
+            <p id="resultSubtitle" class="text-slate-400 text-sm mb-6">You have mastered TLE 8 ICT Tools & Software!</p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto mb-8">
+                <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+                    <span class="text-xs text-slate-400">Score</span>
+                    <p class="text-2xl font-extrabold text-cyan-400 mt-1"><span id="finalScore">0</span> / 30</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+                    <span class="text-xs text-slate-400">Grade</span>
+                    <p id="finalGrade" class="text-2xl font-extrabold text-emerald-400 mt-1">0%</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+                    <span class="text-xs text-slate-400">Max Streak</span>
+                    <p id="finalStreak" class="text-2xl font-extrabold text-amber-400 mt-1">0</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-700">
+                    <span class="text-xs text-slate-400">Status</span>
+                    <p id="passStatus" class="text-2xl font-extrabold text-blue-400 mt-1">PASSED</p>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button onclick="startGame()" class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/20 transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Try Again
+                </button>
+                <button onclick="toggleReviewScreen()" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-cyan-400"></i> Review Answers
+                </button>
+            </div>
+
+            <!-- Detailed Question Review Container -->
+            <div id="reviewContainer" class="hidden text-left border-t border-slate-700/60 pt-6 mt-6">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-cyan-400"></i> Answer Key & Review
+                </h3>
+                <div id="reviewList" class="space-y-4 max-h-[450px] overflow-y-auto pr-2">
+                    <!-- Review items populating JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-4xl mx-auto w-full text-center text-xs text-slate-500 mt-8 py-2">
+        TLE Grade 8 (MATATAG) Quarter 1 Week 1 • Interactive Learning Module
+    </footer>
+
+    <!-- Game Logic Data & Scripts -->
+    <script>
+        // Full 30 Quiz Questions exact match from PDF content
+        const quizData = [
+            // Part I: Words and tools (items 1-15)
+            {
+                part: "Part I. Words and Tools",
+                question: "1. A computer is a programmable device that:",
+                options: ["A. only plays music", "B. stores, retrieves and processes data", "C. only prints pages"],
+                correct: 1,
+                reason: "A computer stores, retrieves and processes data."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "2. An application software (app) is a program that helps a user:",
+                options: ["A. accomplish a task", "B. cool the computer", "C. repair cables"],
+                correct: 0,
+                reason: "An app helps a user accomplish a task."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "3. Which tool is used in computer programming?",
+                options: ["A. Scanner", "B. Code editor", "C. Cleaning kit"],
+                correct: 1,
+                reason: "Code editors are programming tools."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "4. Visual Studio Code and PyCharm are examples of:",
+                options: ["A. IDEs", "B. routers", "C. antennas"],
+                correct: 0,
+                reason: "Visual Studio Code and PyCharm are IDEs (Integrated Development Environments)."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "5. Which tool tracks changes to code?",
+                options: ["A. Antenna", "B. Drawing tablet", "C. Git"],
+                correct: 2,
+                reason: "Git is a version control system used to track code changes."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "6. GitHub is used to:",
+                options: ["A. store and share code", "B. clean computers", "C. send radio waves"],
+                correct: 0,
+                reason: "GitHub stores and shares code repositories online."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "7. Which tool is used in computer systems servicing?",
+                options: ["A. Blender", "B. Screwdriver", "C. Repeater"],
+                correct: 1,
+                reason: "Screwdrivers are essential hand tools for computer hardware servicing."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "8. What does a cleaning kit do?",
+                options: ["A. Boosts a signal", "B. Tracks code changes", "C. Keeps computers free of dust"],
+                correct: 2,
+                reason: "Cleaning kits keep computers free of dust and debris."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "9. A cable tester and a multimeter are used to:",
+                options: ["A. draw 3D art", "B. check connections and measure electricity", "C. make phone calls"],
+                correct: 1,
+                reason: "Cable testers check wire connections and multimeters measure electrical values."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "10. Which tool is used in visual arts?",
+                options: ["A. Cable tester", "B. Package manager", "C. Drawing tablet"],
+                correct: 2,
+                reason: "Drawing tablets are used for digital illustration and visual arts."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "11. Blender is software used for:",
+                options: ["A. 3D modeling", "B. network monitoring", "C. debugging code"],
+                correct: 0,
+                reason: "Blender is a popular open-source 3D modeling and animation software."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "12. Which connects mobile phones to a network?",
+                options: ["A. Cell tower", "B. Pliers", "C. Scanner"],
+                correct: 0,
+                reason: "Cell towers act as base stations connecting mobile devices to cellular networks."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "13. Which tool boosts signal range?",
+                options: ["A. Debugger", "B. Repeater", "C. Scanner"],
+                correct: 1,
+                reason: "Repeaters regenerate network signals to boost range."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "14. Which tool sends and receives radio waves?",
+                options: ["A. Compiler", "B. Pliers", "C. Antenna"],
+                correct: 2,
+                reason: "Antennas send and receive electromagnetic radio waves."
+            },
+            {
+                part: "Part I. Words and Tools",
+                question: "15. Rules for exchanging data, such as TCP/IP are called:",
+                options: ["A. communication protocols", "B. cleaning tools", "C. 3D tools"],
+                correct: 0,
+                reason: "TCP/IP is a fundamental set of communication protocols."
+            },
+            // Part II: Types of software (items 16-25)
+            {
+                part: "Part II. Types of Software",
+                question: "16. Software that performs a specific user task is called:",
+                options: ["A. system software", "B. middleware", "C. application software"],
+                correct: 2,
+                reason: "Application software is designed to perform specific user tasks."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "17. Which is an example of application software?",
+                options: ["A. Word processor", "B. Firmware", "C. Debugger"],
+                correct: 0,
+                reason: "A word processor is a primary example of application software."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "18. Software that runs the hardware and gives other software a platform is:",
+                options: ["A. application software", "B. system software", "C. driver software"],
+                correct: 1,
+                reason: "System software controls hardware operations and provides an execution platform."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "19. An operating system is an example of:",
+                options: ["A. driver software", "B. system software", "C. middleware"],
+                correct: 1,
+                reason: "Operating systems (like Windows or Linux) are system software."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "20. Which software lets a printer or keyboard work with the computer?",
+                options: ["A. Driver software", "B. Word processor", "C. Web browser"],
+                correct: 0,
+                reason: "Device drivers enable peripheral hardware to communicate with the OS."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "21. Which software links an operating system and applications, or helps new software work with older systems?",
+                options: ["A. Programming software", "B. Driver software", "C. Middleware"],
+                correct: 2,
+                reason: "Middleware acts as a bridge between applications and operating systems."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "22. Programming software helps developers:",
+                options: ["A. watch videos", "B. write, test and debug code", "C. clean hardware"],
+                correct: 1,
+                reason: "Programming software provides tools to write, test, and debug code."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "23. Which is an example of programming software?",
+                options: ["A. Debugger", "B. Web browser", "C. Printer driver"],
+                correct: 0,
+                reason: "Debuggers are tools categorized under programming software."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "24. How many types of software did the lesson discuss?",
+                options: ["A. Five", "B. Two", "C. Ten"],
+                correct: 0,
+                reason: "Five types: application, system, driver, middleware, and programming software."
+            },
+            {
+                part: "Part II. Types of Software",
+                question: "25. Which is NOT a type of software?",
+                options: ["A. Driver", "B. Middleware", "C. Cleaning kit"],
+                correct: 2,
+                reason: "A cleaning kit is physical maintenance hardware, not software."
+            },
+            // Part III: Why ICT tools matter (items 26-30)
+            {
+                part: "Part III. Why ICT Tools Matter",
+                question: "26. Which is one of the dimensions of software quality in the lesson?",
+                options: ["A. Screen color", "B. Usability", "C. Keyboard size"],
+                correct: 1,
+                reason: "Usability is a key dimension of software quality."
+            },
+            {
+                part: "Part III. Why ICT Tools Matter",
+                question: "27. ICT tools improve efficiency by:",
+                options: ["A. making work slower", "B. creating more errors", "C. automating repetitive work"],
+                correct: 2,
+                reason: "ICT tools automate repetitive work to improve speed and accuracy."
+            },
+            {
+                part: "Part III. Why ICT Tools Matter",
+                question: "28. Why is choosing the right tool important?",
+                options: ["A. It does not matter", "B. It affects efficiency, accuracy, safety and results", "C. It is only for looks"],
+                correct: 1,
+                reason: "The right tool directly affects work efficiency, accuracy, safety, and overall output."
+            },
+            {
+                part: "Part III. Why ICT Tools Matter",
+                question: "29. Which is an essential ICT tool?",
+                options: ["A. Sundial", "B. Candle", "C. Computer"],
+                correct: 2,
+                reason: "Computers are fundamental essential ICT tools."
+            },
+            {
+                part: "Part III. Why ICT Tools Matter",
+                question: "30. The lesson activity asks you to create a step-by-step ____ on how to install and use application software.",
+                options: ["A. poem", "B. song", "C. tutorial"],
+                correct: 2,
+                reason: "The module activity requires creating a step-by-step tutorial."
+            }
+        ];
+
+        // State variables
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let userAnswers = [];
+        let soundMuted = false;
+
+        function toggleSound() {
+            soundMuted = !soundMuted;
+            const icon = document.getElementById("soundIcon");
+            const text = document.getElementById("soundText");
+            if (soundMuted) {
+                icon.className = "fa-solid fa-volume-xmark text-slate-400";
+                text.textContent = "Sound OFF";
+            } else {
+                icon.className = "fa-solid fa-volume-high text-cyan-400";
+                text.textContent = "Sound ON";
+            }
+        }
+
+        function playSound(type) {
+            if (soundMuted) return;
+            if (type === 'correct') sfx.correct();
+            else if (type === 'wrong') sfx.wrong();
+            else if (type === 'click') sfx.click();
+            else if (type === 'win') sfx.win();
+        }
+
+        function startGame() {
+            playSound('click');
+            currentQuestionIdx = 0;
+            score = 0;
+            streak = 0;
+            maxStreak = 0;
+            userAnswers = [];
+
+            document.getElementById("startScreen").classList.add("hidden");
+            document.getElementById("resultScreen").classList.add("hidden");
+            document.getElementById("quizScreen").classList.remove("hidden");
+            document.getElementById("quizScreen").classList.add("flex");
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = quizData[currentQuestionIdx];
+
+            // Update UI elements
+            document.getElementById("questionNum").textContent = currentQuestionIdx + 1;
+            document.getElementById("partTag").textContent = q.part;
+            document.getElementById("questionText").textContent = q.question;
+            document.getElementById("scoreDisplay").textContent = score;
+            document.getElementById("streakCount").textContent = streak;
+
+            // Progress bar
+            const progress = ((currentQuestionIdx) / quizData.length) * 100;
+            document.getElementById("progressBar").style.width = `${progress}%`;
+
+            // Reset feedback
+            const feedback = document.getElementById("feedbackPanel");
+            feedback.classList.add("hidden");
+            feedback.className = "hidden p-4 rounded-2xl border transition-all duration-300 pop-in mb-4";
+
+            // Next button state
+            const nextBtn = document.getElementById("nextBtn");
+            nextBtn.disabled = true;
+            nextBtn.className = "px-6 py-3 bg-slate-700 text-slate-400 cursor-not-allowed font-bold rounded-xl transition flex items-center gap-2";
+
+            // Populate options
+            const container = document.getElementById("optionsContainer");
+            container.innerHTML = "";
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn w-full text-left p-4 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-200 font-medium text-sm sm:text-base flex items-center justify-between group";
+                btn.onclick = () => selectOption(idx);
+                
+                btn.innerHTML = `
+                    <span>${opt}</span>
+                    <span class="w-6 h-6 rounded-full border border-slate-600 group-hover:border-cyan-400 flex items-center justify-center text-xs transition-colors">
+                        ${String.fromCharCode(65 + idx)}
+                    </span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIdx) {
+            playSound('click');
+            const q = quizData[currentQuestionIdx];
+            const isCorrect = selectedIdx === q.correct;
+
+            // Store user choice
+            userAnswers.push({
+                questionIdx: currentQuestionIdx,
+                selected: selectedIdx,
+                isCorrect: isCorrect
+            });
+
+            // Update score & streak
+            if (isCorrect) {
+                score++;
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+                playSound('correct');
+            } else {
+                streak = 0;
+                playSound('wrong');
+            }
+
+            document.getElementById("scoreDisplay").textContent = score;
+            document.getElementById("streakCount").textContent = streak;
+
+            // Highlight options
+            const buttons = document.getElementById("optionsContainer").children;
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = true;
+                if (i === q.correct) {
+                    buttons[i].className = "w-full text-left p-4 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500 text-emerald-300 font-semibold text-sm sm:text-base flex items-center justify-between";
+                } else if (i === selectedIdx && !isCorrect) {
+                    buttons[i].className = "w-full text-left p-4 rounded-2xl bg-rose-500/20 border-2 border-rose-500 text-rose-300 font-semibold text-sm sm:text-base flex items-center justify-between";
+                } else {
+                    buttons[i].className = "w-full text-left p-4 rounded-2xl bg-slate-900/40 border border-slate-800 text-slate-500 text-sm sm:text-base flex items-center justify-between opacity-50";
+                }
+            }
+
+            // Show feedback
+            const feedback = document.getElementById("feedbackPanel");
+            const feedbackIcon = document.getElementById("feedbackIcon");
+            const feedbackTitle = document.getElementById("feedbackTitle");
+            const feedbackReason = document.getElementById("feedbackReason");
+
+            feedback.classList.remove("hidden");
+            if (isCorrect) {
+                feedback.classList.add("bg-emerald-500/10", "border-emerald-500/30", "text-emerald-300");
+                feedbackIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+                feedbackTitle.textContent = "Correct Answer!";
+            } else {
+                feedback.classList.add("bg-rose-500/10", "border-rose-500/30", "text-rose-300");
+                feedbackIcon.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-400"></i>`;
+                feedbackTitle.textContent = "Incorrect Choice";
+            }
+            feedbackReason.textContent = q.reason;
+
+            // Enable Next Button
+            const nextBtn = document.getElementById("nextBtn");
+            nextBtn.disabled = false;
+            nextBtn.className = "px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/25 transition flex items-center gap-2 cursor-pointer transform active:scale-95";
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentQuestionIdx++;
+            if (currentQuestionIdx < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            playSound('win');
+            document.getElementById("quizScreen").classList.add("hidden");
+            document.getElementById("resultScreen").classList.remove("hidden");
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            document.getElementById("finalScore").textContent = score;
+            document.getElementById("finalGrade").textContent = `${percentage}%`;
+            document.getElementById("finalStreak").textContent = maxStreak;
+
+            const badgeIcon = document.getElementById("badgeIcon");
+            const resultTitle = document.getElementById("resultTitle");
+            const resultSubtitle = document.getElementById("resultSubtitle");
+            const passStatus = document.getElementById("passStatus");
+
+            if (percentage >= 90) {
+                badgeIcon.textContent = "🥇";
+                badgeIcon.className = "w-20 h-20 mx-auto mb-4 rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-4xl shadow-xl shadow-amber-500/10";
+                resultTitle.textContent = "ICT Expert!";
+                resultSubtitle.textContent = "Outstanding performance! You know your tools and software inside out.";
+                passStatus.textContent = "EXCELLENT";
+                passStatus.className = "text-2xl font-extrabold text-amber-400 mt-1";
+            } else if (percentage >= 75) {
+                badgeIcon.textContent = "🥈";
+                badgeIcon.className = "w-20 h-20 mx-auto mb-4 rounded-full bg-cyan-500/20 border-2 border-cyan-400 flex items-center justify-center text-4xl shadow-xl shadow-cyan-500/10";
+                resultTitle.textContent = "Great Job!";
+                resultSubtitle.textContent = "You demonstrated strong understanding of ICT fundamentals.";
+                passStatus.textContent = "PASSED";
+                passStatus.className = "text-2xl font-extrabold text-emerald-400 mt-1";
+            } else if (percentage >= 60) {
+                badgeIcon.textContent = "🥉";
+                badgeIcon.className = "w-20 h-20 mx-auto mb-4 rounded-full bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center text-4xl shadow-xl shadow-blue-500/10";
+                resultTitle.textContent = "Good Effort!";
+                resultSubtitle.textContent = "You passed! A little more review will make you an ICT wizard.";
+                passStatus.textContent = "PASSED";
+                passStatus.className = "text-2xl font-extrabold text-blue-400 mt-1";
+            } else {
+                badgeIcon.textContent = "📚";
+                badgeIcon.className = "w-20 h-20 mx-auto mb-4 rounded-full bg-rose-500/20 border-2 border-rose-400 flex items-center justify-center text-4xl shadow-xl shadow-rose-500/10";
+                resultTitle.textContent = "Needs Review";
+                resultSubtitle.textContent = "Don't worry! Review the key concepts and try again to master ICT.";
+                passStatus.textContent = "TRY AGAIN";
+                passStatus.className = "text-2xl font-extrabold text-rose-400 mt-1";
+            }
+
+            // Build Review Items
+            buildReviewList();
+        }
+
+        function toggleReviewScreen() {
+            playSound('click');
+            const reviewContainer = document.getElementById("reviewContainer");
+            reviewContainer.classList.toggle("hidden");
+        }
+
+        function buildReviewList() {
+            const list = document.getElementById("reviewList");
+            list.innerHTML = "";
+
+            quizData.forEach((q, idx) => {
+                const userAns = userAnswers.find(u => u.questionIdx === idx);
+                const isCorrect = userAns ? userAns.isCorrect : false;
+                const userChoiceText = userAns ? q.options[userAns.selected] : "Not Answered";
+
+                const item = document.createElement("div");
+                item.className = `p-4 rounded-2xl border ${isCorrect ? 'bg-slate-800/40 border-emerald-500/30' : 'bg-slate-800/40 border-rose-500/30'}`;
+                
+                item.innerHTML = `
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${isCorrect ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                            ${isCorrect ? '<i class="fa-solid fa-check mr-1"></i> Correct' : '<i class="fa-solid fa-xmark mr-1"></i> Incorrect'}
+                        </span>
+                        <span class="text-xs text-slate-400">${q.part}</span>
+                    </div>
+                    <p class="font-semibold text-sm text-slate-200 mb-2">${q.question}</p>
+                    <div class="text-xs space-y-1 mb-2">
+                        <p class="${isCorrect ? 'text-emerald-400' : 'text-rose-400'}"><strong>Your Answer:</strong> ${userChoiceText}</p>
+                        ${!isCorrect ? `<p class="text-emerald-400"><strong>Correct Answer:</strong> ${q.options[q.correct]}</p>` : ''}
+                    </div>
+                    <div class="text-xs text-slate-400 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
+                        <i class="fa-solid fa-circle-info text-cyan-400 mr-1"></i> <strong>Reason:</strong> ${q.reason}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
